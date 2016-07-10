@@ -1,0 +1,2 @@
+# MiniBioKit
+A mini Biochemistry toolkit that would aid in primer design, and provide some other functions that may have more use.
