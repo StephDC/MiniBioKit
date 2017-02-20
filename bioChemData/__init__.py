@@ -3,3 +3,4 @@
 from . import sqldb
 from . import restrictionEnzyme
 from . import protein
+from . import nucleotide
