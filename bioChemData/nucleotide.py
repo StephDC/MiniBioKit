@@ -67,6 +67,7 @@ def fuzzyNuc(seq, ntype = 'DNA'):
 
 class nucSeq():
     def __init__(self,data,ntype = 'DNA'):
+        data = str(data).upper()
         self.ntype = ntype
         self.reversed = False
         if (not fuzzyNuc(data,ntype)) and enumDNA(revComp(data),ncode[ntype]) < enumDNA(data,ncode[ntype]):
