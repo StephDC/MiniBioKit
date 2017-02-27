@@ -1,4 +1,4 @@
-import bioChemData.nucleotide
+from MiniBioKit import bioChemData
 
 def treatLineFeed(fh,rl):
     '''Require file handler fh and remaining length rl
