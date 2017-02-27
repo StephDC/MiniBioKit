@@ -16,7 +16,7 @@ def main(args):
     target = bioChemData.nucleotide.revComp(target)
     while data.find(target,pointer) != -1:
         tmp = data.find(target,pointer)
-        result.add(-tmp)
+        result.add(tmp)
         pointer = tmp+1
     print(result)
 
