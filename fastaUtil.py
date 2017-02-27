@@ -97,3 +97,25 @@ class fastaFile():
             elif foundMatch and line[0] != ';':
                 result += line.strip().upper()
         return result
+
+def fastMatch(stdin,seqName,target):
+#	A faster but less memory efficient way to seek for
+#	the occurence positions of a certain target sequence.
+#	Would take the memory space enough to store the whole
+#	database sequence.
+    data = stdin.readSeq(seqName)
+    pointer = 0
+    result = set()
+    while data.find(target,pointer) != -1:
+        tmp = data.find(target,pointer)
+        result.add(tmp)
+        pointer = tmp+1
+    pointer = target
+    target = bioChemData.nucleotide.revComp(target)
+    if pointer != target:
+        pointer = 0
+        while data.find(target,pointer) != -1:
+            tmp = data.find(target,pointer)
+            result.add(tmp)
+            pointer = tmp+1
+    return result
