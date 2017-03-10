@@ -18,7 +18,7 @@ class ucscFile():
         and '''
     def __init__(self,name,description='',visibility='hide',color='255,255,255',priority='100',additionConf='',browserConf=None):
         self.config = equalDict()
-        self.type = 'unknown'
+        self.config['type'] = 'unknown'
         self.config['name'] = name
         self.config['description'] = description
         self.config['visibility'] = visibility
@@ -31,16 +31,12 @@ class ucscFile():
             self.brow = browserConf
         self.data = []
     def __str__(self):
-        result = self.brow.strip()
-        result += '\ntrack type='+self.type
-        result += ' name="'+self.name'"'
-        if self.desc:
-            result += ' description="'+self.desc+'"'
-        result += ' visibility='+self.visi
-        result += ' color='+str(self.color)[1:-1].replace(' ','')
-        result += ' priority='+str(self.prio)
+        result = str(self.brow if self.brow)
+        result += '\ntrack '
+        result += str(self.config)
         if self.addn.strip():
-        result += ' '+self.addn.strip()+'\n'
+            result += ' '+self.addn.strip()
+        result += '\n'
         for item in self.data:
             result += str(item)
         return result
@@ -55,13 +51,14 @@ class ucscFile():
 
 class wigFile(ucscFile):
 '''A write-only wig file creator'''
-    def __init__(self,name,description='',visibility='hide',color=[255,255,255],priority=100,additionConf='',browserConf=''):
-        self.type = 'wiggle_0'
-        self.name = name
-        self.desc = description
-        self.visi = visibility
-        self.color = color
-        self.prio = priority
+    def __init__(self,name,description='',visibility='hide',color='255,255,255',priority='100',additionConf='',browserConf=''):
+        self.config = equalDict()
+        self.config['type'] = 'wiggle_0'
+        self.config['name'] = name
+        self.config['description'] = description
+        self.config['visibility'] = visibility
+        self.config['color'] = color
+        self.config['priority'] = priority
         self.addn = additionConf
         self.brow = browserConf
         self.data = []
@@ -90,11 +87,11 @@ Need to specify chromosome when initializing.'''
             if span:
                 result += ' span='+str(self.span)
             result += '\n'
-            for item in self.data:
-                result += str(item[0])+' '+str(item[1])+'\n'
         else:
             result += ' start='+str(self.start)
             result += ' step='+str(self.span)
+        for item in self.data:
+            result += str(item)+'\n'
         return result
     def __getitem__(self,key):
         return self.data[key]
