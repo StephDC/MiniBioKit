@@ -6,6 +6,13 @@ class equalDict(dict):
                 result += item+'='+self[item]+' '
         return result[:-1]
 
+class spaceList(list):
+    def __str__(self):
+        result = ''
+        for item in self:
+            result+=str(item)+' '
+        return result[:-1]
+
 class ucscFile():
     '''Universal file structure for UCSC Genome Sequence files including wig
         and '''
