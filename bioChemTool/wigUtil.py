@@ -31,7 +31,7 @@ class ucscFile():
             self.brow = browserConf
         self.data = []
     def __str__(self):
-        result = str(self.brow if self.brow)
+        result = str(self.brow) if self.brow else ''
         result += '\ntrack '
         result += str(self.config)
         if self.addn.strip():
@@ -50,7 +50,7 @@ class ucscFile():
         stdout.close()
 
 class wigFile(ucscFile):
-'''A write-only wig file creator'''
+    '''A write-only wig file creator'''
     def __init__(self,name,description='',visibility='hide',color='255,255,255',priority='100',additionConf='',browserConf=''):
         self.config = equalDict()
         self.config['type'] = 'wiggle_0'
@@ -64,7 +64,7 @@ class wigFile(ucscFile):
         self.data = []
 
 class wigItem():
-'''Items that could be joined into a wig file
+    '''Items that could be joined into a wig file
 Has two types:
     variableStep - varStep = True (default)
     fixedStep - varStep = False
@@ -78,13 +78,13 @@ Need to specify chromosome when initializing.'''
         self.span = span
         self.data = []
     def __str__(self):
-        if varStep:
+        if self.type:
             result = 'variableStep '
         else:
             result = 'fixedStep '
         result += 'chrom='+self.chr
-        if varStep:
-            if span:
+        if self.type:
+            if self.span:
                 result += ' span='+str(self.span)
             result += '\n'
         else:
