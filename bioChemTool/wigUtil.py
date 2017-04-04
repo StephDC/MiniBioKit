@@ -2,8 +2,11 @@ class equalDict(dict):
     def __str__(self):
         result = ''
         for item in self.keys():
-            if self[item] is not None:
-                result += item+'='+self[item]+' '
+            if self[item] is not None and len((self[item])) > 0:
+                if type(self[item]) is str and self[item].find(' ') >= 0:
+                    result += item + '="' + self[item] + '" '
+                else:
+                    result += item+'='+self[item]+' '
         return result[:-1]
 
 class spaceList(list):
@@ -101,7 +104,6 @@ Need to specify chromosome when initializing.'''
         return self.data.__iter__()
     def append(self,item):
         self.data.append(item)
+    add = append
     def pop(self):
         return self.data.pop()
-
-

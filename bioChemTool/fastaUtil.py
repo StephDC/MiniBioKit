@@ -98,24 +98,29 @@ class fastaFile():
                 result += line.strip().upper()
         return result
 
-def fastMatch(stdin,seqName,target):
+def fastMatch(stdin,seqName,tar):
 #	A faster but less memory efficient way to seek for
 #	the occurence positions of a certain target sequence.
 #	Would take the memory space enough to store the whole
 #	database sequence.
+    if type(tar) is str:
+        tarList = [tar]
+    else:
+        tarList = tar
     data = stdin.readSeq(seqName)
     pointer = 0
     result = set()
-    while data.find(target,pointer) != -1:
-        tmp = data.find(target,pointer)
-        result.add(tmp)
-        pointer = tmp+1
-    pointer = target
-    target = bioChemData.nucleotide.revComp(target)
-    if pointer != target:
-        pointer = 0
+    for target in tarList:
         while data.find(target,pointer) != -1:
             tmp = data.find(target,pointer)
             result.add(tmp)
             pointer = tmp+1
-    return result
+        pointer = target
+        target = bioChemData.nucleotide.revComp(target)
+        if pointer != target:
+            pointer = 0
+            while data.find(target,pointer) != -1:
+                tmp = data.find(target,pointer)
+                result.add(tmp)
+                pointer = tmp+1
+    return sorted(result)
