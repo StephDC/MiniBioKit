@@ -108,9 +108,9 @@ def fastMatch(stdin,seqName,tar):
     else:
         tarList = tar
     data = stdin.readSeq(seqName)
-    pointer = 0
     result = set()
     for target in tarList:
+        pointer = 0
         while data.find(target,pointer) != -1:
             tmp = data.find(target,pointer)
             result.add(tmp)
