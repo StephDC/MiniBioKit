@@ -17,7 +17,7 @@ class spaceList(list):
         return result[:-1]
 
 class ucscFile():
-    '''Universal file structure for UCSC Genome Sequence files including wig'''
+    '''Universal file structure for UCSC Genome Sequence files including wig and bedgraph'''
     def __init__(self,name,description='',visibility='hide',color='0,0,0',priority='100',additionConf='',browserConf=None):
         self.config = equalDict()
         self.config['type'] = 'unknown'
