@@ -169,7 +169,16 @@ def parseOption(stdin):
         else:
             raise SAMParseWarning('Option',item[:2])
     return result
-def parseData(stdin):
+def parseFlag(stdin):
+    tmp = int(stdin)
+    result = []
+    fList = ['multiSegments','allProperlyAligned','segUnmapped','nextSegUnmapped',
+        'seqRevComp','nextSeqRevComp','firstSeg','lastSeg','secondAlign','notPassFilters','PCROptDup','supAlign']
+    for i in range(12):
+        if bool((1<<i) & tmp):
+            result.append(fList[i])
+    return result
+def parseData(stdin,flag=True):
     tmp = stdin.strip().split('\t')
     if len(tmp) < 11:
         raise SAMParseWarning('alignment','Data:\n'+stdin)
@@ -177,6 +186,8 @@ def parseData(stdin):
     keys = ['qName','Flag','rName','Pos','MapQ','Cigar','rNext','pNext','tLen','Seq','Qual']
     for item in range(11):
         result[keys[item]] = tmp[item].strip()
+    if flag:
+        result['Flag'] = parseFlag(result['Flag'])
     if len(tmp) > 11:
         result['Option'] = parseOption(tmp[11:])
     return result
@@ -211,6 +222,7 @@ class samFile():
     def __init__(self,fName):
         self.fName = fName
         self.header = None
+        self.index = None
         stdin = open(fName,'r')
         ptr = stdin.readline()
         # Empirically determined header line existence
@@ -227,6 +239,33 @@ class samFile():
                 self.header = None
     def __iter__(self):
         return samIter(self)
+    def __getitem__(self,index):
+        stdin = open(self.fName,'r')
+        # Do we have an index available?
+        if self.index is None:
+            self.index = {'strName':{},'seekPos':{}}
+            result = []
+            seekPos = 0
+            line = stdin.readline()
+            processedLines = 0
+            while line:
+                tmp = line.strip().split('\t')
+                if len(tmp) > 0:
+                    if (len(tmp[0]) > 1) and tmp[0][0] != '@':
+                        if tmp[2] not in self.index['strName']:
+                            self.index['strName'][tmp[2]] = []
+                            self.index['seekPos'][tmp[2]] = []
+                        self.index['strName'][tmp[2]].append(tmp[0])
+                        self.index['seekPos'][tmp[2]].append(seekPos)
+                    if tmp[0] == index:
+                        result.append(parseData(line.strip()))
+                seekPos = stdin.tell()
+                if processedLines % 1000000 == 1:
+                    print(processedLines//1000000)
+                line = stdin.readline()
+                processedLines += 1
+        stdin.close()
+        return result
     def parseLine(self,line):
         result = {}
         return result
