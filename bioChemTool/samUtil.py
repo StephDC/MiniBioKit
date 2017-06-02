@@ -1,4 +1,3 @@
-import dsvUtil
 class SAMParseWarning(SyntaxError):
     def __init__(self,name,part):
         SyntaxError.__init__(self,'The '+name+' did not look like a '+name+'. '+part)
@@ -134,7 +133,34 @@ def parseOption(stdin):
 'E2':'Z',
 'FI':'i',
 'FS':'Z',
-'H0':'i'
+'H0':'i',
+'H1':'i',
+'H2':'i',
+'HI':'i',
+'IH':'i',
+'LB':'Z',
+'MC':'Z',
+'MD':'Z',
+'MQ':'i',
+'NH':'i',
+'NM':'i',
+'OC':'Z',
+'OP':'i',
+'OQ':'Z',
+'PG':'Z',
+'PQ':'i',
+'PT':'Z',
+'PU':'Z',
+'QT':'Z',
+'Q2':'Z',
+'R2':'Z',
+'RG':'Z',
+'RT':'Z',
+'SA':'Z',
+'SM':'i',
+'TC':'i',
+'U2':'Z',
+'UQ':'i'
 }
     result = {}
     for item in stdin:

@@ -1,5 +1,5 @@
 class iterCache():
-    '''iterCache: The cache used by the iterParse Parser
+    '''iterCache: The cache used by the dsvParser
     This would serve as the cache to balance between disk read and memory space
     It should be initialized by the iterParse initializer, but feel free to
     use it in any other places where it might be useful.
@@ -63,14 +63,10 @@ class iterParse_iterator():
             raise StopIteration
         else:
             tmp = self.lineParse(result[:-1])
-           # result = {}
-           # for item in range(len(self.index)):
-           #     result[self.index[item]]=tmp[item]
-           # return result
             return tmp
 
-class iterParse():
-    '''iterParse: The Iterated TSV Parser
+class dsvParse():
+    '''dsvParse: The Iterated DSV Parser
     This would allow parsing a Tab-separated value data with limited memory space
     or with faster access speed.
     This would also be able to parse Comma-separated value and Pipe-separated value
