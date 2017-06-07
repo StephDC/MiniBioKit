@@ -38,6 +38,28 @@ def readLine(data,readLen=10):
     result = more[:more.find(b'\x00')]
     data.seek(origPos+len(result)+1)
     return result
+def readBackLine(data,readLen=10):
+    origPos = data.tell()
+    data.seek(origPos-readLen)
+    more = data.read(readLen)
+    data.seek(origPos-readLen)
+    while more[:-1].find(b'\x00') == -1:
+        if data.tell() < readLen:
+            readLen = data.tell()
+            data.seek(0)
+            more = data.read(readLen) + more
+            break
+        data.seek(data.tell()-readLen)
+        more = data.read(readLen)+more
+        data.seek(data.tell()-readLen)
+    first = 0
+    for item in reversed(more[:-1]):
+        first += 1
+        if item == b'\x00':
+            break
+    result = more[-first+2:-1]
+    data.seek(origPos-len(result)-1)
+    return result
 def parseKey(name,key,val,stdout,part,valid=None,prefix='',append=False):
     if val.strip()[:2] == key:
         try:
@@ -215,57 +237,61 @@ def parseData(stdin,flag=True):
     return result
 
 # Class
+class fileCache():
+    def __init__(self,fName):
+        self.fName = fName
+        stdin = open(fName,'rb')
+        self.data = stdin.read()
+        stdin.close()
+        if self.data[:3] == b'BZh' and self.data[4:10] == b'\x31\x41\x59\x26\x53\x59':
+            import bz2
+            self.data = bz2.decompress(self.data)
+        self.ptr = 0
+    def tell(self):
+        return self.ptr
+    def seek(self,sPos):
+        self.ptr = sPos
+    def read(self,rLen=None):
+        if rLen is None:
+            result = self.data[self.ptr:]
+            self.ptr = len(self.data)-1
+            return result
+        result = self.data[self.ptr:self.ptr+rLen]
+        self.ptr += rLen
+        if self.ptr >= len(self.data):
+            self.ptr = len(self.data)-1
+        return result
+    def find(self,query):
+        return self.data.find(query,self.ptr)
+    def index(self,query):
+        return self.data.index(query,self.ptr)
 class samIndex():
     def __init__(self,fName):
         self.fName = fName
         try:
-            stdin = open(fName,'rb')
+            stdin = fileCache(fName)
         except FileNotFoundError:
             self.data = None
         else:
             self.length = len(stdin.read())-4
-            self.data = {}
-            stdin.close()
-    def __len__(self):
-        return self.length+4
-    def parseData(self):
-        stdin = open(self.fName,'rb')
-        tmp = stdin.read(4)
-        if tmp != b'\x53\x41\x49\x01':
-            raise SAMParseWarning('index','Magic Number seemed bad.')
-        tmp = stdin.read(2)
-        if tmp != b'\x01\x00':
-            raise SAMParseWarning('index','Index file version wrong.')
-        numWidth = bytesToInt(stdin.read(1))
-        while stdin.tell() < self.length:
-            tmp = [bytesToInt(stdin.read(numWidth)),readLine(stdin),readLine(stdin)]
-            if tmp[1] not in self.data:
-                self.data[tmp[1]] = {'index':[],'name':[]}
-            self.data[tmp[1]]['index'].append(tmp[0])
-            self.data[tmp[1]]['index'].append(tmp[1])
-        if stdin.read()[:4] != b'\x01IAS':
-            raise SAMParseWarning('index','Index file seemed incomplete.')
-    def __getitem__(self,index):
-        result = []
+            self.data = stdin
+    def __getitem__(self,query):
+        qName = query.encode('ascii')
         if self.data is None:
-            raise SAMParseWarning('index','The SAM file did not come with its index.')
-        elif self.data == {}:
-            self.parseData()
-        for item in self.data:
-            if index in self.data[item]['name']:
-                result.append(self.data[item]['index'][self.data[item]['name'].index(index)])
+            raise SAMParseWarning('index','No index file found')
+        self.data.seek(6)
+        numLength = bytearray(self.data.read(1))[0]
+        result = []
+        while self.data.find(qName) != -1:
+            self.data.seek(self.data.index(qName))
+            readBackLine(self.data)
+            self.data.seek(self.data.tell()-numLength+1)
+            print(self.data.read(20))
+            self.data.seek(self.data.tell()-20)
+            tmp = self.data.read(numLength)
+            self.data.seek(self.data.find(qName)+len(qName)+1)
+            result.append(bytesToInt(tmp))
         return result
-    def getItem(self,index,chrNum=None):
-        if chrNum is not None:
-            if self.data == {}:
-                self.parseData()
-            if type(chrNum) is int:
-                chromosome = 'chr'+str(chrNum)
-            else:
-                chromosome = chrNum
-            return self.data[chromosome][item]['index']
-        else:
-            return self[index]
     def makeIndex(self,fHandle,searchKey = None,forceWrite = False):
         if not forceWrite:
             try:
@@ -283,18 +309,15 @@ class samIndex():
             raise SAMParseError('SAM','Parser received a file that did not look like a SAM file')
     # This would consume a file iterator
         fin = 0
-        self.data = {}
+        dataSet = []
         if searchKey is not None:
             result = []
         for item in stdin:
             if bool(item.strip().split('\t')) and item.strip()[0]!='@':
                 tmp = parseData(item.strip())
                 if tmp is not None:
-                    if tmp['rName'] not in self.data:
-                        self.data[tmp['rName']] = {'name':[],'index':[]}
-                    self.data[tmp['rName']]['name'].append(tmp['qName'])
-                    self.data[tmp['rName']]['index'].append(fin)
-                    if searchKey is not None and tmp['rName'] == searchKey:
+                    dataSet.append([fin,b'\x00'+tmp['rName'].encode('ascii')+b'\x00'+tmp['qName'].encode('ascii')+b'\x00'])
+                    if searchKey is not None and tmp['qName'] == searchKey:
                         result.append(fin)
             fin += len(item)
         stdin.close()
@@ -303,22 +326,19 @@ class samIndex():
         import math
         numLength = int(math.log(fin,2)/8)+1
         stdout.write(bytes(bytearray([numLength])))
-        for data in self.data:
-            for datum in range(len(self.data[data]['name'])):
-                index = bytearray(numLength)
-                tmp = self.data[data]['index'][datum]
-                for fin in range(numLength):
-                    index[fin] = tmp % 256
-                    tmp = tmp >> 8
-                    if tmp == 0:
-                        break
-                stdout.write(bytes(index))
-                stdout.write(data.encode('ascii'))
-                stdout.write(b'\x00')
-                stdout.write(self.data[data]['name'][datum].encode('ascii'))
-                stdout.write(b'\x00')
+        for data in dataSet:
+            index = bytearray(numLength)
+            tmp = data[0]
+            for fin in range(numLength):
+                index[fin] = tmp % 256
+                tmp = tmp >> 8
+                if tmp == 0:
+                    break
+            stdout.write(bytes(index))
+            stdout.write(data[1])
         stdout.write(b'\x01IAS')
         stdout.close()
+        self.data = fileCache(self.fName)
         if searchKey is not None:
             return result
 class samIter():
@@ -378,6 +398,7 @@ class samFile():
                 stdin.close()
                 return self.index.makeIndex(self.fName,index)
         tmp = self.index[index]
+        print(tmp)
         for item in tmp:
             stdin.seek(item)
             result.append(parseData(stdin.readline().strip()))
