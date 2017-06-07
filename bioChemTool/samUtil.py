@@ -26,30 +26,18 @@ def bytesToInt(data):
         result += i
     return result
 # This is a dirty readLine that would attempt to read more.
-def readLine(data,readLen=1):
+def readLine(data,readLen=10):
     origPos = data.tell()
     more = data.read(readLen)
-    while more.find(b'\x00') != -1:
+    while more.find(b'\x00') == -1:
         bFlag = len(more)
         more += data.read(readLen)
         if bFlag == len(more):
             more += b'\x00'
             break
     result = more[:more.find(b'\x00')]
-    data.seek(origPos+len(result)+2)
+    data.seek(origPos+len(result)+1)
     return result
-def readLine(data,readLen=1):
-    more = data.read(1)
-    while more.find(b'\x00')!= -1:
-        tmp = data.read(1)
-        if tmp == b'':
-            break
-        elif tmp == b'\x00':
-            break
-        else:
-            more += tmp
-    print(more)
-    return more
 def parseKey(name,key,val,stdout,part,valid=None,prefix='',append=False):
     if val.strip()[:2] == key:
         try:
@@ -255,7 +243,7 @@ class samIndex():
                 self.data[tmp[1]] = {'index':[],'name':[]}
             self.data[tmp[1]]['index'].append(tmp[0])
             self.data[tmp[1]]['index'].append(tmp[1])
-        if stdin.read()[:4] != '\x01IAS':
+        if stdin.read()[:4] != b'\x01IAS':
             raise SAMParseWarning('index','Index file seemed incomplete.')
     def __getitem__(self,index):
         result = []
