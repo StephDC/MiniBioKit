@@ -26,14 +26,30 @@ def bytesToInt(data):
         result += i
     return result
 # This is a dirty readLine that would attempt to read more.
-def readLine(data,readLen=50):
+def readLine(data,readLen=1):
     origPos = data.tell()
     more = data.read(readLen)
     while more.find(b'\x00') != -1:
+        bFlag = len(more)
         more += data.read(readLen)
-    result = more[:more.index(b'\x00')]
-    data.seek(origPos+len(result)+1)
+        if bFlag == len(more):
+            more += b'\x00'
+            break
+    result = more[:more.find(b'\x00')]
+    data.seek(origPos+len(result)+2)
     return result
+def readLine(data,readLen=1):
+    more = data.read(1)
+    while more.find(b'\x00')!= -1:
+        tmp = data.read(1)
+        if tmp == b'':
+            break
+        elif tmp == b'\x00':
+            break
+        else:
+            more += tmp
+    print(more)
+    return more
 def parseKey(name,key,val,stdout,part,valid=None,prefix='',append=False):
     if val.strip()[:2] == key:
         try:
@@ -225,16 +241,16 @@ class samIndex():
     def __len__(self):
         return self.length+4
     def parseData(self):
-        stdin = open(fName,'rb')
+        stdin = open(self.fName,'rb')
         tmp = stdin.read(4)
         if tmp != b'\x53\x41\x49\x01':
             raise SAMParseWarning('index','Magic Number seemed bad.')
         tmp = stdin.read(2)
         if tmp != b'\x01\x00':
             raise SAMParseWarning('index','Index file version wrong.')
-        numWidth = bytesToInt(tmp.read(1))
-        while stdin.tell() != self.length:
-            tmp = bytesToInt(stdin.read(numWidth)),readLine(stdin),readLine(stdin)
+        numWidth = bytesToInt(stdin.read(1))
+        while stdin.tell() < self.length:
+            tmp = [bytesToInt(stdin.read(numWidth)),readLine(stdin),readLine(stdin)]
             if tmp[1] not in self.data:
                 self.data[tmp[1]] = {'index':[],'name':[]}
             self.data[tmp[1]]['index'].append(tmp[0])
@@ -245,15 +261,15 @@ class samIndex():
         result = []
         if self.data is None:
             raise SAMParseWarning('index','The SAM file did not come with its index.')
-        elif self.data == []:
+        elif self.data == {}:
             self.parseData()
         for item in self.data:
-            if index in self.data[item]:
-                result.append(self.data[item][index]['index'])
+            if index in self.data[item]['name']:
+                result.append(self.data[item]['index'][self.data[item]['name'].index(index)])
         return result
     def getItem(self,index,chrNum=None):
         if chrNum is not None:
-            if self.data == []:
+            if self.data == {}:
                 self.parseData()
             if type(chrNum) is int:
                 chromosome = 'chr'+str(chrNum)
@@ -295,9 +311,10 @@ class samIndex():
             fin += len(item)
         stdin.close()
         stdout = open(self.fName,'wb')
-        stdout.write(b'SAI\x01')
+        stdout.write(b'SAI\x01\x01\x00')
         import math
         numLength = int(math.log(fin,2)/8)+1
+        stdout.write(bytes(bytearray([numLength])))
         for data in self.data:
             for datum in range(len(self.data[data]['name'])):
                 index = bytearray(numLength)
@@ -309,9 +326,9 @@ class samIndex():
                         break
                 stdout.write(bytes(index))
                 stdout.write(data.encode('ascii'))
-                stdout.write('\x00')
+                stdout.write(b'\x00')
                 stdout.write(self.data[data]['name'][datum].encode('ascii'))
-                stdout.write('\x00')
+                stdout.write(b'\x00')
         stdout.write(b'\x01IAS')
         stdout.close()
         if searchKey is not None:
