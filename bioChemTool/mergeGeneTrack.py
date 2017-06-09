@@ -46,6 +46,14 @@ def main(args):
     stdin = []
     for item in args[1:]:
         stdin.append(gffUtil.gffIter(item))
+    snapshot = []
+    while len(stdin):
+        for item in range(len(stdin)):
+            try:
+                snapshot[item] = next(stdin[item])
+            except StopIteration:
+                snapshot[item] = None
+                stdin.remove(stdin[item])
 
 if __name__ == '__main__':
     main(sys.argv[1:])
