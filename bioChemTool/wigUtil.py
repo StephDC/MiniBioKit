@@ -1,25 +1,9 @@
-class equalDict(dict):
-    def __str__(self):
-        result = ''
-        for item in self.keys():
-            if self[item] is not None and len((self[item])) > 0:
-                if type(self[item]) is str and self[item].find(' ') >= 0:
-                    result += item + '="' + self[item] + '" '
-                else:
-                    result += item+'='+self[item]+' '
-        return result[:-1]
-
-class spaceList(list):
-    def __str__(self):
-        result = ''
-        for item in self:
-            result+=str(item)+' '
-        return result[:-1]
+import commonUtil
 
 class ucscFile():
     '''Universal file structure for UCSC Genome Sequence files including wig and bedgraph'''
     def __init__(self,name,description='',visibility='hide',color='0,0,0',priority='100',additionConf='',browserConf=None):
-        self.config = equalDict()
+        self.config = commonUtil.equalDict()
         self.config['type'] = 'unknown'
         self.config['name'] = name
         self.config['description'] = description
@@ -28,7 +12,7 @@ class ucscFile():
         self.config['priority'] = priority
         self.addn = additionConf
         if browserConf is None:
-            self.brow = equalDict()
+            self.brow = commonUtil.equalDict()
         else:
             self.brow = browserConf
         self.data = []
@@ -54,7 +38,7 @@ class ucscFile():
 class wigFile(ucscFile):
     '''A write-only wig file creator'''
     def __init__(self,name,description='',visibility='hide',color='255,255,255',priority='100',additionConf='',browserConf=''):
-        self.config = equalDict()
+        self.config = commonUtil.equalDict()
         self.config['type'] = 'wiggle_0'
         self.config['name'] = name
         self.config['description'] = description

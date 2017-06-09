@@ -1,3 +1,5 @@
+import commonUtil
+
 class iterCache():
     '''iterCache: The cache used by the dsvParser
     This would serve as the cache to balance between disk read and memory space
@@ -57,13 +59,15 @@ class iterParse_iterator():
     def __iter__(self):
         return self
     def __next__(self):
-        result = self.stdin.readline()
-        if result == '':
-            self.stdin.close()
-            raise StopIteration
-        else:
-            tmp = self.lineParse(result[:-1])
-            return tmp
+        tmp = None
+        while tmp is None:
+            result = self.stdin.readline()
+            if result == '':
+                self.stdin.close()
+                raise StopIteration
+            else:
+                tmp = self.lineParse(result[:-1])
+        return tmp
     next = __next__
 
 class dsvParse():
@@ -135,10 +139,10 @@ class dsvParse():
                 result.remove(None)
         if len(result) != len(self.keys):
             raise SyntaxError('Unequal number of data found, data line:\n'+line)
-        return result
+        return commonUtil.tabList(result)
     def findLine(self,name):
         result = self.cache.getItem(name)
-	# Not yet cached
+	    # Not yet cached?
         if result is None:
             stdin = open(self.fName)
             hit = False
@@ -152,6 +156,7 @@ class dsvParse():
                 self.cache.setItem(tmp,hit)
             stdin.close()
         return result
+    __getitem__ = fineLine
     def findCol(self,key):
         if key not in self.keys:
             raise KeyError("Key "+key+" not found in this file")
