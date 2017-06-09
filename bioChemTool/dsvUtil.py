@@ -64,6 +64,7 @@ class iterParse_iterator():
         else:
             tmp = self.lineParse(result[:-1])
             return tmp
+    next = __next__
 
 class dsvParse():
     '''dsvParse: The Iterated DSV Parser
@@ -72,7 +73,7 @@ class dsvParse():
     This would also be able to parse Comma-separated value and Pipe-separated value
     given the separator was specified.
     '''
-    def __init__(self,stdin,mem = 'memsaver',sep = '\t',quote = None):
+    def __init__(self,stdin,mem = 'memsaver',sep = '\t',quote = None, head=True):
         '''Parameters:
         stdin: Input file name
         mem: Memory model - memsaver, jit, random, limit

@@ -50,6 +50,7 @@ class fastaIter():
             result = result[:result.index('\n')] + treatLineFeed(self.data,self.rl-result.index('\n'))
         self.data.seek(tmp+1)
         return bioChemData.nucleotide.nucSeq(result)
+    next = __next__
 
 class fastaFile():
     def __init__(self,fName):
