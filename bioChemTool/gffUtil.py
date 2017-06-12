@@ -3,25 +3,25 @@ import commonUtil
 def attrParser(line):
     result = commonUtil.equalDict({},';')
     tmp = line.strip().split(';')
-    for item in line:
-        data = tmp.split('=')
+    for item in tmp:
+        data = item.split('=')
         result[data[0]] = data[1]
     return result
 
 def frameParser(frame):
     if frame == '.':
-            return None
-        else:
-            return int(frame)
+        return '.'
+    else:
+        return int(frame)
 
 def gffParser(line):
     ''' A simple GFF parser that take # as comment.'''
     if len(line) != 0 and line[0]!= '#':
-        result = []
-        tmp = line.split('\t'):
+        result = commonUtil.tabList()
+        tmp = line.split('\t')
         strandParser = lambda x: x != '-'
         parser = [str,str,str,int,int,float,strandParser,frameParser,attrParser]
-        for item in range(len(tmp))
+        for item in range(len(tmp)):
             result.append(parser[item](tmp[item]))
         return result
     else:
@@ -37,4 +37,6 @@ def gffWriter(stdout,data):
 
 class gffIter(dsvUtil.iterParse_iterator):
     def __init__(self,fName):
-        dsvUtil.iterParse_iterator(open(args[0],'r'),['seqname','source','feature','start','end','score','strand','frame','attribute'],gffParser)
+        self.stdin = open(fName,'r')
+        self.index = ['seqname','source','feature','start','end','score','strand','frame','attribute']
+        self.lineParse = gffParser

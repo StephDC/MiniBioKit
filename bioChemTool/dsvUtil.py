@@ -156,7 +156,7 @@ class dsvParse():
                 self.cache.setItem(tmp,hit)
             stdin.close()
         return result
-    __getitem__ = fineLine
+    __getitem__ = findLine
     def findCol(self,key):
         if key not in self.keys:
             raise KeyError("Key "+key+" not found in this file")
