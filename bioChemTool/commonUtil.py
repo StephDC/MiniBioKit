@@ -30,7 +30,13 @@ class equalDict(dict):
                     result += item+'='+str(self[item])+self.delimeter
         return result[:-1]
 
-spaceList  = delList
+class spaceList(list):
+    def __str__(self):
+        result = ''
+        for item in self:
+            result += str(item)+' '
+        return result[:-1]
+
 class tabList(delList):
     def __init__(self,data=[]):
         delList.__init__(self,data=data,delimeter='\t')

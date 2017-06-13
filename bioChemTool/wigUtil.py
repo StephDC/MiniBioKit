@@ -1,4 +1,4 @@
-import commonUtil
+from . import commonUtil
 
 class ucscFile():
     '''Universal file structure for UCSC Genome Sequence files including wig and bedgraph'''
