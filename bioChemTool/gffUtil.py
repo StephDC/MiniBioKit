@@ -1,5 +1,6 @@
-import dsvUtil
-import commonUtil
+from . import dsvUtil
+commonUtil = dsvUtil.commonUtil
+
 def attrParser(line):
     result = commonUtil.equalDict({},';')
     tmp = line.strip().split(';')
@@ -40,3 +41,4 @@ class gffIter(dsvUtil.iterParse_iterator):
         self.stdin = open(fName,'r')
         self.index = ['seqname','source','feature','start','end','score','strand','frame','attribute']
         self.lineParse = gffParser
+        self.lastResult = None

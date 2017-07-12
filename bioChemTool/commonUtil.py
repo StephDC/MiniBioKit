@@ -4,6 +4,7 @@
 # However the use of this utility in other parts of your code
 # is strongly encouraged.
 
+## Not Working ##
 class delList(list):
     ''' Delimeter-separated list, with default delimeter of space ( ) '''
     def __init__(self,data=[],delimeter=' '):
@@ -38,8 +39,34 @@ class spaceList(list):
         return result[:-1]
 
 class tabList(delList):
-    def __init__(self,data=[]):
-        delList.__init__(self,data=data,delimeter='\t')
+    def __str__(self):
+        result = ''
+        for item in self:
+            result += str(item)+'\t'
+        return result[:-1]
+
+class listOrder(list):
+    def __lt__(self,other):
+        ptr = 0
+        while ptr < len(self) and self[ptr] == other[ptr]:
+            ptr+=1
+        if ptr == len(self) or ptr == len(other):
+            return len(self) < len(other)
+        else:
+            return self[ptr] < other[ptr]
+    def __eq__(self,other):
+        if len(self) == len(other):
+            for item in range(len(self)):
+                if self[item]!=other[item]:
+                    return False
+            return True
+        return False
+
+def chrList(maxNum):
+    result = ['chr']*maxNum
+    for i in range(maxNum):
+        result[i] += str(i+1)
+    return result
 
 def insertItem(dest,item,skey = lambda x: x):
     ''' Insert item into an ordered list to keep the list in order. '''
@@ -53,3 +80,34 @@ def insertItem(dest,item,skey = lambda x: x):
             else:
                 lBond = ptr
     dest.insert(uBond,item)
+
+def fiveNum(dataSet):
+    tmp = sorted(dataSet)
+    result = {}
+    result['min'] = tmp[0]
+    result['max'] = tmp[-1]
+    result['median'] = tmp[len(dataSet)>>1]
+    result['Q1'] = tmp[len(dataSet)>>2]
+    result['Q3'] = tmp[-len(dataSet)>>2]
+    return result
+
+def splitQuote(data,cleaver=' '):
+    quoteType = '\'"'
+    quoted = None
+    result = []
+    tmp = ''
+    for char in data:
+        if char in quoteType:
+            if quoted is None:
+                quoted = char
+            elif char == quoted:
+                quoted = None
+        elif char == cleaver and quoted is None:
+            if tmp:
+                result.append(tmp)
+            tmp = ''
+        else:
+            tmp += char
+    if tmp:
+        result.append(tmp)
+    return result

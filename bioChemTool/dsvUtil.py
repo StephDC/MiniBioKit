@@ -205,7 +205,14 @@ def dsvSort(stdin,stdout,printer,compare,group=[0]):
         stdin.seek(0)
         result = []
         for line in stdin:
-            if group[cat] is None or (line is not None and line[group[0]]) == group[cat]:
+            if line is not None and line[group[0]] == group[cat]:
                 commonUtil.insertItem(result,line,compare)
         for line in result:
             stdout.write(printer(line))
+    stdin.seek(0)
+    result = []
+    for line in stdin:
+        if line is not None and line[group[0]] not in group[1:]:
+            commonUtil.insertItem(result,line,compare)
+    for line in result:
+        stdout.write(printer(line))

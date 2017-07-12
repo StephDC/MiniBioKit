@@ -1,6 +1,6 @@
 #! /usr/bin/env python3
 import sys
-import gffUtil
+from . import gffUtil
 
 def compareSegment(smaller,bigger,chrList):
     ''' Return True if smaller is smaller than bigger '''
@@ -23,7 +23,6 @@ def main(args):
     snapshot = [None]*len(stdin)
     while stdin.count(None) < len(stdin)*(1-qualifyCutoff):
         firstSeg = None
-        #lastSeg = None
         for item in range(len(stdin)):
             try:
                 if snapshot[item] is None and stdin[item] is not None:
@@ -44,7 +43,7 @@ def main(args):
         commonReg = [firstSeg[3],firstSeg[4]]
         counter = []
         for item in range(len(snapshot)):
-            if snapshot[item] is not None and snapshot[item][3] < firstSeg[3]+overlapCutoff*segLength:
+            if snapshot[item] is not None and snapshot[item][0] == firstSeg[0] and snapshot[item][3] < firstSeg[3]+overlapCutoff*segLength:
                 if snapshot[item][3] > commonReg[0]:
                     commonReg[0] = snapshot[item][3]
                 if snapshot[item][4] < commonReg[1]:
