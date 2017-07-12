@@ -62,6 +62,98 @@ class listOrder(list):
             return True
         return False
 
+class RegionIter():
+    def __init__(self,chrom,pos,end):
+        self.chrom = chrom
+        self.pos = pos
+        self.end = end
+    def __iter__(self):
+        return self
+    def __next__(self):
+        self.pos += 1
+        return Region(self.chrom,self.pos-1,self.pos)
+
+class Region():
+    def __init__(self,chrom,start,end):
+        self.chrom=chrom
+        self.start=start
+        self.end=end
+    def __getitem__(self,key):
+        if type(key)==str:
+            if key == 'chr':
+                return self.chrom
+            elif key == 'start':
+                return self.start
+            elif key == 'end':
+                return self.end
+        elif type(key)==int and key <= end-start:
+            return Region(chrom,start+key,start+key+1)
+        else:
+            raise KeyError('Illegal key')
+    def __str__(self):
+        return 'chr'+str(self.chrom)+':'+str(self.start)+'-'+str(self.end)
+    def __repr__(self):
+        return str(self)
+    def __len__(self):
+        return self.end - self.start
+    def __lt__(self,other):
+        if self.chrom != other.chrom:
+            return self.chrom < other.chrom
+        elif self.start != other.start:
+            return self.start < other.start
+        else:
+            return self.end < other.end
+    def __eq__(self,other):
+        if self.start == self.end:
+            return other.start == other.end
+        else:
+            return self.chrom == other.chrom and self.start == other.start and self.end == other.end
+    def __contains__(self,other):
+        if type(other) == int:
+            return self.start <= other < self.end
+        elif type(other) == Region:
+            if self.chrom == other.chrom and self.start <= other.start and self.end <= other.end:
+                return True
+            else:
+                return False
+        else:
+            raise NotImplemented
+    def __add__(self,other):
+        if type(other) == int:
+            self.end += other
+        elif type(other) == Region:
+            if self[0] in other:
+                return Region(self.chrom,other.start,max([self.end,other.end]))
+            elif other[0] in self:
+                return Region(self.chrom,self.start,max([self.end,other.end]))
+            else:
+                raise NotImplemented('Two regions are not overlapping or connected to each other.')
+        else:
+            raise NotImplemented
+    def __radd__(self,other):
+        if type(other) == int:
+            if self.start > other:
+                self.start -= other
+            else:
+                raise IndexError("Extending beyond the beginning of the genome")
+        else:
+            return self.__add__(other)
+    def __mul__(self,other):
+        if type(other) != int:
+            raise NotImplemented
+        else:
+            result = Region(self.chrom,self.start,self.end)
+            result.resize(len(self)*other)
+            return result
+    def __iter__(self):
+        return RegionIter(self.chrom,self.start,self.end)
+    def resize(self,size):
+        mid = self['start']+self['end']
+        self['start'] = mid - size >> 1
+        self['end'] = mid + size >> 1
+        if self['start'] < 1:
+            self['start'] = 1
+
 def chrList(maxNum):
     result = ['chr']*maxNum
     for i in range(maxNum):
