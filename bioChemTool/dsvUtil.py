@@ -1,3 +1,5 @@
+from . import commonUtil
+
 class iterCache():
     '''iterCache: The cache used by the dsvParser
     This would serve as the cache to balance between disk read and memory space
@@ -54,17 +56,35 @@ class iterParse_iterator():
         self.stdin = stdin
         self.index = header
         self.lineParse = lineParser
+        self.lastResult = None
     def __iter__(self):
         return self
     def __next__(self):
-        result = self.stdin.readline()
-        if result == '':
-            self.stdin.close()
-            raise StopIteration
-        else:
-            tmp = self.lineParse(result[:-1])
-            return tmp
+        tmp = None
+        while tmp is None:
+            result = self.stdin.readline()
+            if result == '':
+                raise StopIteration
+            else:
+                tmp = self.lineParse(result[:-1])
+        self.lastResult = tmp
+        return tmp
     next = __next__
+    def lastDict(self):
+        if self.lastResult is None:
+            return None
+        result = {}
+        for key in range(len(self.index)):
+            result[index[key]] = self.lastResult[key]
+        return result
+    def getLast(self,col):
+        if self.lastResult is None:
+            return None
+        return self.lastResult[self.index.index(col)]
+    def seek(self,target):
+        self.stdin.seek(target)
+    def tell(self):
+        self.stdin.tell()
 
 class dsvParse():
     '''dsvParse: The Iterated DSV Parser
@@ -138,7 +158,7 @@ class dsvParse():
         return result
     def findLine(self,name):
         result = self.cache.getItem(name)
-	# Not yet cached
+	    # Not yet cached?
         if result is None:
             stdin = open(self.fName)
             hit = False
@@ -152,6 +172,7 @@ class dsvParse():
                 self.cache.setItem(tmp,hit)
             stdin.close()
         return result
+    __getitem__ = findLine
     def findCol(self,key):
         if key not in self.keys:
             raise KeyError("Key "+key+" not found in this file")
@@ -171,3 +192,27 @@ class dsvParse():
                 raise KeyError("Data "+name+" not found in this file")
             else:
                 return tmp[self.keys.index(key)]
+
+def dsvSort(stdin,stdout,printer,compare,group=[0]):
+    '''
+    Sort a DSV using two keys: group in group order, and key in numerical order
+    stdin, stdout: File handles
+    printer: Function to print the parsed data returned by stdin iterator
+    compare: Function to get the key to compare. e.g. lambda x: x[0]
+    group: Group index, with each of the groups name in a list
+    '''
+    for cat in range(1,len(group)):
+        stdin.seek(0)
+        result = []
+        for line in stdin:
+            if line is not None and line[group[0]] == group[cat]:
+                commonUtil.insertItem(result,line,compare)
+        for line in result:
+            stdout.write(printer(line))
+    stdin.seek(0)
+    result = []
+    for line in stdin:
+        if line is not None and line[group[0]] not in group[1:]:
+            commonUtil.insertItem(result,line,compare)
+    for line in result:
+        stdout.write(printer(line))
