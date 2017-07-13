@@ -62,6 +62,30 @@ class listOrder(list):
             return True
         return False
 
+class stdout():
+    name = "stdout"
+    def __init__(self):
+        self.disabled = False
+    def write(self,data):
+        if self.disabled:
+            raise ValueError("I/O operation on closed file.")
+        if type(data) == bytes:
+            tmp = data.decode('UTF-8')
+        else:
+            tmp = data
+        if len(tmp) and tmp[-1] == '\n':
+            tmp = tmp[:-1]
+        print(tmp)
+    def writable(self):
+        return not self.disabled
+    def writelines(self,dataset):
+        for item in dataset:
+            self.write(item)
+    def readable(self):
+        return False
+    def close(self):
+        self.disabled = True
+
 class RegionIter():
     def __init__(self,chrom,pos,end):
         self.chrom = chrom
@@ -74,10 +98,11 @@ class RegionIter():
         return Region(self.chrom,self.pos-1,self.pos)
 
 class Region():
-    def __init__(self,chrom,start,end):
+    def __init__(self,chrom,start,end,data=None):
         self.chrom=chrom
         self.start=start
         self.end=end
+        self.data = data
     def __getitem__(self,key):
         if type(key)==str:
             if key == 'chr':
@@ -86,8 +111,8 @@ class Region():
                 return self.start
             elif key == 'end':
                 return self.end
-        elif type(key)==int and key <= end-start:
-            return Region(chrom,start+key,start+key+1)
+        elif type(key)==int and key <= self.end-self.start:
+            return Region(self.chrom,self.start+key,self.start+key+1)
         else:
             raise KeyError('Illegal key')
     def __str__(self):
@@ -97,6 +122,8 @@ class Region():
     def __len__(self):
         return self.end - self.start
     def __lt__(self,other):
+        if type(other) != Region:
+            raise TypeError('Comparisons only make sense if they belong to the same type.')
         if self.chrom != other.chrom:
             return self.chrom < other.chrom
         elif self.start != other.start:
@@ -104,6 +131,8 @@ class Region():
         else:
             return self.end < other.end
     def __eq__(self,other):
+        if type(other) != Region:
+            return False
         if self.start == self.end:
             return other.start == other.end
         else:
@@ -112,24 +141,24 @@ class Region():
         if type(other) == int:
             return self.start <= other < self.end
         elif type(other) == Region:
-            if self.chrom == other.chrom and self.start <= other.start and self.end <= other.end:
+            if self.chrom == other.chrom and self.start <= other.start and self.end >= other.end:
                 return True
             else:
                 return False
         else:
-            raise NotImplemented
+            return NotImplemented
     def __add__(self,other):
         if type(other) == int:
             self.end += other
+        elif other is None:
+            raise TypeError("NoneType + Regions is undefined")
         elif type(other) == Region:
-            if self[0] in other:
-                return Region(self.chrom,other.start,max([self.end,other.end]))
-            elif other[0] in self:
-                return Region(self.chrom,self.start,max([self.end,other.end]))
+            if self.overlap(other) or self.start == other.end or self.end == other.start:
+                return Region(self.chrom,min((self.start,other.start)),max((self.end,other.end)))
             else:
-                raise NotImplemented('Two regions are not overlapping or connected to each other.')
+                return NotImplemented #('Two regions are not overlapping or connected to each other.')
         else:
-            raise NotImplemented
+            return NotImplemented
     def __radd__(self,other):
         if type(other) == int:
             if self.start > other:
@@ -140,7 +169,7 @@ class Region():
             return self.__add__(other)
     def __mul__(self,other):
         if type(other) != int:
-            raise NotImplemented
+            return NotImplemented
         else:
             result = Region(self.chrom,self.start,self.end)
             result.resize(len(self)*other)
@@ -153,6 +182,10 @@ class Region():
         self['end'] = mid + size >> 1
         if self['start'] < 1:
             self['start'] = 1
+    def overlap(self,other):
+        if type(other) != Region:
+            raise NotImplemented
+        return self[0] in other or other[0] in self
 
 def chrList(maxNum):
     result = ['chr']*maxNum
