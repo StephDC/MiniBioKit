@@ -113,6 +113,21 @@ class Region():
                 return self.end
         elif type(key)==int and key <= self.end-self.start:
             return Region(self.chrom,self.start+key,self.start+key+1)
+        elif type(key)==slice and key.step is None:
+            result = Region(self.chrom,self.start,self.end,self.data)
+            if key.start is not None:
+                if key.start < 0:
+                    result.start = result.end + key.start
+                else:
+                    result.start = result.start + key.start
+            if key.stop is not None:
+                if key.stop < 0:
+                    result.end = result.end + key.stop
+                else:
+                    result.end = self.start + key.stop
+            if result.end - result.start < 0 or result not in self:
+                raise KeyError('Illegal index')
+            return result
         else:
             raise KeyError('Illegal key')
     def __str__(self):
@@ -150,8 +165,8 @@ class Region():
     def __add__(self,other):
         if type(other) == int:
             self.end += other
-        elif other is None:
-            raise TypeError("NoneType + Regions is undefined")
+        #elif other is None:
+        #    raise TypeError("NoneType + Regions is undefined")
         elif type(other) == Region:
             if self.overlap(other) or self.start == other.end or self.end == other.start:
                 return Region(self.chrom,min((self.start,other.start)),max((self.end,other.end)))
