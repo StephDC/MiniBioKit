@@ -85,9 +85,7 @@ class seqData():
             tmp = tmp[10:]
         return result
 
-class featureList():
-    def __init__(self):
-        self.data = []
+class featureList(list):
     def addData(self,data):
         if data.strip().split(' ')[0] == 'misc_feature':
             for item in data.strip().split(' ')[1:]:
@@ -98,9 +96,9 @@ class featureList():
                     else:
                         direct = True
                         location = [int(i) for i in item.split('..')]
-            self.data.append(featureItem('misc_feature',location,direct))
+            self.append(featureItem('misc_feature',location,direct))
         else:
-            self.data[-1].data.append(data)
+            self[-1].data.append(data)
 
 class featureItem():
     def __init__(self, nombre, location, direction):
@@ -121,8 +119,8 @@ def parseApeFile(stdin):
                 if itemType == 'ORIGIN':
                     itemData = seqData()
 # TODO: Implement FEATURES
-#               elif itemType == 'FEATURES':
-#                   itemData = featureList()
+                elif itemType == 'FEATURES':
+                    itemData = featureList()
                 else:
                     itemData = lineList([inlineList([])])
                     for inlineItem in tmp[1:]:
