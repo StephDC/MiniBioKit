@@ -43,8 +43,8 @@ class tabList(delList):
         for item in self:
             result += str(item)+'\t'
         return result[:-1]
-spaceList = lambda x=None:delList(x,' ')
-tabList = lambda x=None:delList(x,'\t')
+spaceList = lambda x=[]:delList(x,' ')
+tabList = lambda x=[]:delList(x,'\t')
 
 class listOrder(list):
     def __lt__(self,other):
