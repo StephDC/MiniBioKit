@@ -7,9 +7,8 @@
 ## Not Working ##
 class delList(list):
     ''' Delimeter-separated list, with default delimeter of space ( ) '''
-    def __init__(self,data=[],delimeter=' '):
-        list.__init__(data)
-        self.delimeter = delimeter
+    def setDel(self,delim):
+        self.delimeter = delim
     def __str__(self):
         return self.delimeter.join([str(i) for i in self])
 
@@ -35,6 +34,9 @@ class spaceList(list):
         for item in self:
             result += str(item)+' '
         return result[:-1]
+class spaceList(list):
+    def __str__(self):
+        return ' '.join([str(i) for i in self])
 
 class tabList(delList):
     '''Obsolete definition'''
@@ -43,8 +45,12 @@ class tabList(delList):
         for item in self:
             result += str(item)+'\t'
         return result[:-1]
-spaceList = lambda x=[]:delList(x,' ')
-tabList = lambda x=[]:delList(x,'\t')
+
+class tabList(list):
+    def __str__(self):
+        return '\t'.join([str(i) for i in self])
+#spaceList = lambda x=[]:delList(x,' ')
+#tabList = lambda x=[]:delList(x,'\t')
 
 class listOrder(list):
     def __lt__(self,other):
