@@ -11,10 +11,7 @@ class delList(list):
         list.__init__(data)
         self.delimeter = delimeter
     def __str__(self):
-        result = ''
-        for item in self:
-            result += str(item)+self.delimeter
-        return result[:-1]
+        return self.delimeter.join([str(i) for i in self])
 
 class equalDict(dict):
     ''' Equal-sign (=) connected dict, with default separator of a space ( )'''
@@ -32,6 +29,7 @@ class equalDict(dict):
         return result[:-1]
 
 class spaceList(list):
+    '''Obsolete definition'''
     def __str__(self):
         result = ''
         for item in self:
@@ -39,11 +37,14 @@ class spaceList(list):
         return result[:-1]
 
 class tabList(delList):
+    '''Obsolete definition'''
     def __str__(self):
         result = ''
         for item in self:
             result += str(item)+'\t'
         return result[:-1]
+spaceList = lambda x=None:delList(x,' ')
+tabList = lambda x=None:delList(x,'\t')
 
 class listOrder(list):
     def __lt__(self,other):
