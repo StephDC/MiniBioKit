@@ -90,6 +90,14 @@ class nucSeq():
         except Exception:
             return False
     def __getitem__(self,item):
+        if type(item) is slice:
+            tmp = ''
+            sstart = item.start if item.start is not None else 0
+            sstop = item.stop if item.stop is not None else len(self)-1
+            sstep = item.step if item.step is not None else 1
+            for i in range(sstart,sstop,sstep):
+                tmp += self[i]
+            return nucSeq(tmp)
         if item >= len(self) or item < -len(self):
             raise IndexError
         if self.reversed:
